@@ -1,0 +1,50 @@
+/*
+Dataset cleaned in Microsoft Excel
+Uploaded into BigQuery as `analog-figure-377104`.weather.weather
+SQL Queries ran in DataGrip 2022.3.3
+*/
+
+#1. Give the count of the minimum number of days for the time when temperature reduced
+WITH cte AS (
+  SELECT date, Minimum_temperature____F_,
+         LAG(Minimum_temperature____F_) OVER (ORDER BY date) AS prev_temp
+  FROM `analog-figure-377104`.weather.weather
+)
+SELECT COUNT(date) as Count_of_days_when_Temperature_reduced
+FROM cte
+WHERE Minimum_temperature____F_ < prev_temp
+
+#2. Find the temperature as Cold / hot by using the case and avg of values of the given data set
+WITH cte AS (
+   SELECT AVG(Average_temperature____F_) AS avg_temp
+   FROM analog-figure-377104.weather.weather
+)
+SELECT w.date,
+       case
+           when w.Average_temperature____F_ < cte.avg_temp Then "Cold"
+else "Hot"
+end as Temp_class
+FROM analog-figure-377104.weather.weather as w
+JOIN cte
+ON 1 = 1
+order by date
+
+#4. Can you find the maximum number of days for which temperature dropped
+with cte as (select date,Average_temperature____F_,
+                    lag(Average_temperature____F_)OVER (order by date) as prev_temp
+             from analog-figure-377104.weather.weather)
+select count(date) as Count_of_days_when_temp_dropped
+       from cte
+where Average_temperature____F_ < prev_temp;
+
+#5. Can you find the average of average humidity from the dataset
+select avg(Average_humidity____) as Average_of_Average_humidity from `analog-figure-377104`.weather.weather;
+
+#6. Use the GROUP BY clause on the Date column and make a query to fetch details for average windspeed ( which is now windspeed done in task 3 )
+select count(date) as count, Average_windspeed__mph_ from `analog-figure-377104`.weather.weather
+group by Average_windspeed__mph_
+order by count desc;
+
+#9. Find the number of days when the temperature went below 0 degrees Celsius
+select count(date) as Number_of_days_below_0_Celsius from `analog-figure-377104`.weather.weather
+where Minimum_temperature____F_ < 32;
